@@ -2,20 +2,18 @@ import { Entity } from "./Entity.js";
 import { TILE_SIZE } from "../core/constants.js";
 
 export class Player extends Entity {
-  constructor(tileX, tileY, input) {
-    super(tileX * TILE_SIZE, tileY * TILE_SIZE);
+  constructor(tileX, tileY, input, map) {
+  super(tileX * TILE_SIZE, tileY * TILE_SIZE);
+  this.tileX = tileX;
+  this.tileY = tileY;
+  this.input = input;
+  this.map = map;
+  this.isMoving = false;
+  this.moveProgress = 0;
+  this.moveSpeed = 80;
+  this.direction = null;
+}
 
-    this.tileX = tileX;
-    this.tileY = tileY;
-
-    this.input = input;
-
-    this.isMoving = false;
-    this.moveProgress = 0;
-    this.moveSpeed = 80;
-
-    this.direction = null;
-  }
 
   update(delta) {
     if (!this.isMoving) {
@@ -33,15 +31,26 @@ export class Player extends Entity {
   }
 
   startMove(direction) {
-    this.direction = direction;
-    this.isMoving = true;
-    this.moveProgress = 0;
+  let targetX = this.tileX;
+  let targetY = this.tileY;
 
-    if (direction === "up") this.tileY--;
-    if (direction === "down") this.tileY++;
-    if (direction === "left") this.tileX--;
-    if (direction === "right") this.tileX++;
+  if (direction === "up") targetY--;
+  if (direction === "down") targetY++;
+  if (direction === "left") targetX--;
+  if (direction === "right") targetX++;
+
+  if (this.map.isBlocked(targetX, targetY)) {
+    return; // movimento cancelado
   }
+
+  this.direction = direction;
+  this.isMoving = true;
+  this.moveProgress = 0;
+
+  this.tileX = targetX;
+  this.tileY = targetY;
+}
+
 
   move(delta) {
     this.moveProgress += this.moveSpeed * delta;
