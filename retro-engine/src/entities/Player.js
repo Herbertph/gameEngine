@@ -3,17 +3,24 @@ import { TILE_SIZE } from "../core/constants.js";
 
 export class Player extends Entity {
   constructor(tileX, tileY, input, map) {
-  super(tileX * TILE_SIZE, tileY * TILE_SIZE);
-  this.tileX = tileX;
-  this.tileY = tileY;
-  this.input = input;
-  this.map = map;
-  this.isMoving = false;
-  this.moveProgress = 0;
-  this.moveSpeed = 80;
-  this.direction = null;
-}
+    super(tileX * TILE_SIZE, tileY * TILE_SIZE);
 
+    this.tileX = tileX;
+    this.tileY = tileY;
+
+    this.input = input;
+    this.map = map;
+
+    this.isMoving = false;
+    this.moveProgress = 0;
+    this.moveSpeed = 80;
+
+    this.direction = null;
+    this.facing = "down";
+
+    // 🔑 Hook de mundo (injetado pelo State)
+    this.canMove = null;
+  }
 
   update(delta) {
     if (!this.isMoving) {
@@ -24,33 +31,42 @@ export class Player extends Entity {
   }
 
   handleInput() {
-    if (this.input.isPressed("ArrowUp")) this.startMove("up");
-    else if (this.input.isPressed("ArrowDown")) this.startMove("down");
-    else if (this.input.isPressed("ArrowLeft")) this.startMove("left");
-    else if (this.input.isPressed("ArrowRight")) this.startMove("right");
+    if (this.input.isPressed("ArrowUp")) {
+      this.facing = "up";
+      this.startMove("up");
+    } else if (this.input.isPressed("ArrowDown")) {
+      this.facing = "down";
+      this.startMove("down");
+    } else if (this.input.isPressed("ArrowLeft")) {
+      this.facing = "left";
+      this.startMove("left");
+    } else if (this.input.isPressed("ArrowRight")) {
+      this.facing = "right";
+      this.startMove("right");
+    }
   }
 
   startMove(direction) {
-  let targetX = this.tileX;
-  let targetY = this.tileY;
+    let targetX = this.tileX;
+    let targetY = this.tileY;
 
-  if (direction === "up") targetY--;
-  if (direction === "down") targetY++;
-  if (direction === "left") targetX--;
-  if (direction === "right") targetX++;
+    if (direction === "up") targetY--;
+    if (direction === "down") targetY++;
+    if (direction === "left") targetX--;
+    if (direction === "right") targetX++;
 
-  if (this.map.isBlocked(targetX, targetY)) {
-    return; // movimento cancelado
+    // ✅ Player não decide sozinho
+    if (this.canMove && !this.canMove(targetX, targetY)) {
+      return;
+    }
+
+    this.direction = direction;
+    this.isMoving = true;
+    this.moveProgress = 0;
+
+    this.tileX = targetX;
+    this.tileY = targetY;
   }
-
-  this.direction = direction;
-  this.isMoving = true;
-  this.moveProgress = 0;
-
-  this.tileX = targetX;
-  this.tileY = targetY;
-}
-
 
   move(delta) {
     this.moveProgress += this.moveSpeed * delta;
